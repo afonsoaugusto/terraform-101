@@ -33,7 +33,7 @@ RUN curl https://releases.hashicorp.com/terraform/${TERRAFORM_VERSION}/terraform
     curl -sLO https://github.com/liamg/tfsec/releases/download/v${TFSEC_VERSION}/tfsec-linux-amd64 && \
     mv tfsec-linux-amd64 /bin/tfsec && \
     chmod +x /bin/tfsec && \
-    pip3 install terraform-compliance &&
+    pip3 install terraform-compliance && \
     pip3 install checkov
 
 

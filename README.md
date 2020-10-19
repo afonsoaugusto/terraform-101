@@ -73,6 +73,8 @@ Uso do controle de versão, adesão ao princípio DRY, modularização, manuten�
 
 Terraform é uma ferramenta open source de **provisionamento** de infraestrutura, criada pela [HashiCorp](https://www.hashicorp.com/), que permite que definamos nossa infraestrutura como código([IaC](https://en.wikipedia.org/wiki/Infrastructure_as_Code)), usando uma linguagem simples e declarativa.
 
+O terraform é desenvolvido em GO e é [openSource](https://github.com/hashicorp/terraform/blob/master/LICENSE)
+
 ### Terraform-flow
 
 ![Terraform](img/terraform-flow.png)
@@ -83,5 +85,78 @@ Terraform é uma ferramenta open source de **provisionamento** de infraestrutura
 * *.tfvars
 * *.plan
 * *.TFSTATE
+
+## Terraform Basics
+
+### Variables
+
+[Variaveis](https://www.terraform.io/docs/configuration/variables.html) são parametros para um modulo de Terraform, permitem que aspectos da implementação seja customizado sem que seu codigo seja alterado.
+
+Temos 3 tipos de uso de variaveis:
+* Input variables are like function arguments
+* Output values are like function return values
+* Local values are like a function's temporary local variables. 
+
+#### Declarando uma variavel de input
+
+```hcl
+variable "image_id" {
+  type = string
+}
+```
+```hcl
+variable "availability_zone_names" {
+  type    = list(string)
+  default = ["us-west-1a"]
+}
+```
+```hcl
+variable "docker_ports" {
+  type = list(object({
+    internal = number
+    external = number
+    protocol = string
+  }))
+  default = [
+    {
+      internal = 8300
+      external = 8300
+      protocol = "tcp"
+    }
+  ]
+}
+```
+```hcl
+variable "image_id" {
+  type        = string
+  description = "The id of the machine image (AMI) to use for the server."
+}
+```
+```hcl
+variable "image_id" {
+  type        = string
+  description = "The id of the machine image (AMI) to use for the server."
+
+  validation {
+    condition     = length(var.image_id) > 4 && substr(var.image_id, 0, 4) == "ami-"
+    error_message = "The image_id value must be a valid AMI id, starting with \"ami-\"."
+  }
+}
+```
+
+#### Precedencia de carregamento
+
+* Environment variables
+* The terraform.tfvars file, if present.
+* The terraform.tfvars.json file, if present.
+* Any *.auto.tfvars or *.auto.tfvars.json files, processed in lexical order of their filenames.
+* Any -var and -var-file options on the command line, in the order they are provided. (This includes variables set by a Terraform Cloud workspace.)
+
+
+### Locals
+
+### Output
+
+### Function
 
 ## Perguntas
