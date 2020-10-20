@@ -8,6 +8,7 @@
 
 * [terraform.io](https://www.terraform.io/)
 * [learn-terraform](https://learn.hashicorp.com/terraform)
+* [Documentation](https://www.terraform.io/docs/configuration)
 
 **cursos**
 
@@ -30,12 +31,12 @@ rm -rf presentation.html
 * Terraform Basics
   * Variaveis
   * Outupts
+  * Locals
   * Funções
 * Providers
 * Resources
 * Data
 * Modulos
-* Locals
 * Workspaces
 * Backend - TFSTATE
   * Estrutura do bucket s3 utilizado
@@ -152,11 +153,209 @@ variable "image_id" {
 * Any *.auto.tfvars or *.auto.tfvars.json files, processed in lexical order of their filenames.
 * Any -var and -var-file options on the command line, in the order they are provided. (This includes variables set by a Terraform Cloud workspace.)
 
-
 ### Locals
+
+Um Local é um valor que recebe um nome a partir de uma expressão ou valor.
+
+```hcl
+locals {
+  # Ids for multiple sets of EC2 instances, merged together
+  instance_ids = concat(aws_instance.blue.*.id, aws_instance.green.*.id)
+}
+
+locals {
+  # Common tags to be assigned to all resources
+  common_tags = {
+    Service = local.service_name
+    Owner   = local.owner
+  }
+}
+```
 
 ### Output
 
-### Function
+Output é uma forma de expor o valor, seja como retorno de um modulo ou imprimindo como retorno do root.
+
+```hcl
+output "instance_ip_addr" {
+  value = aws_instance.server.private_ip
+}
+```
+
+```hcl
+output "instance_ip_addr" {
+  value       = aws_instance.server.private_ip
+  description = "The private IP address of the main server instance."
+}
+```
+
+```hcl
+output "db_password" {
+  value       = aws_db_instance.db.password
+  description = "The password for logging in to the database."
+  sensitive   = true
+}
+```
+
+```hcl
+output "instance_ip_addr" {
+  value       = aws_instance.server.private_ip
+  description = "The private IP address of the main server instance."
+
+  depends_on = [
+    # Security group rule must be created before this IP address could
+    # actually be used, otherwise the services will be unreachable.
+    aws_security_group_rule.local_access,
+  ]
+}
+```
+
+### [Type Constraints](https://www.terraform.io/docs/configuration/variables.html#type-constraints)
+
+São os tipos que as variaveis podem receber como argumentos na declaração.
+
+#### Simples
+
+* string
+* number
+* bool
+
+#### Complexos
+
+* list(<TYPE>)
+* set(<TYPE>)
+* map(<TYPE>)
+* object({<ATTR NAME> = <TYPE>, ... })
+* tuple([<TYPE>, ...])
+
+### [Functions](https://www.terraform.io/docs/configuration/functions.html)
+
+* Numeric Functions
+* String Functions
+* Collection Functions
+* Encoding Functions
+* Filesystem Functions
+* Date and Time Functions
+* Hash and Crypto Functions
+* IP Network Functions
+* Type Conversion Functions
+
+#### Principais funções
+
+##### [Format](https://www.terraform.io/docs/configuration/functions/format.html)
+
+`format(spec, values...)`
+
+```hcl
+> format("Hello, %s!", "Ander")
+Hello, Ander!
+> format("There are %d lights", 4)
+There are 4 lights
+```
+```hcl
+> format("Hello, %s!", var.name)
+Hello, Valentina!
+> "Hello, ${var.name}!"
+Hello, Valentina!
+```
+
+##### [Join](https://www.terraform.io/docs/configuration/functions/join.html)
+
+`join(separator, list)`
+
+```hcl
+> join(", ", ["foo", "bar", "baz"])
+foo, bar, baz
+> join(", ", ["foo"])
+foo
+```
+
+##### [Split](https://www.terraform.io/docs/configuration/functions/split.html)
+
+`split(separator, string)`
+
+```hcl
+> split(",", "foo,bar,baz")
+[
+  "foo",
+  "bar",
+  "baz",
+]
+> split(",", "foo")
+[
+  "foo",
+]
+> split(",", "")
+[
+  "",
+]
+```
+
+##### [Upper](https://www.terraform.io/docs/configuration/functions/upper.html), [lower](https://www.terraform.io/docs/configuration/functions/lower.html), [title](https://www.terraform.io/docs/configuration/functions/title.html)
+
+```hcl
+> upper("hello")
+HELLO
+> upper("алло!")
+АЛЛО!
+```
+
+```hcl
+> lower("HELLO")
+hello
+> lower("АЛЛО!")
+алло!
+```
+
+```hcl
+> title("hello world")
+Hello World
+```
+
+##### [Element](https://www.terraform.io/docs/configuration/functions/element.html) [Index](https://www.terraform.io/docs/configuration/functions/index.html)
+
+`element(list, index)`
+
+```hcl
+> element(["a", "b", "c"], 1)
+b
+```
+
+`index(list, value)`
+
+```hcl
+> index(["a", "b", "c"], "b")
+1
+```
+
+##### [Map](https://www.terraform.io/docs/configuration/functions/map.html)
+
+* From Terraform v0.12, the Terraform language has built-in syntax for creating maps using the { and } delimiters. Use the built-in syntax instead. The map function will be removed in a future version of Terraform.
+
+```hcl
+> map("a", "b", "c", "d")
+{
+  "a" = "b"
+  "c" = "d"
+}
+```
+
+```hcl
+> {"a" = "b", "c" = "d"}
+{
+  "a" = "b"
+  "c" = "d"
+}
+```
+
+## Modulos para analise
+
+* msk
+* s3
+* cloudfront-distribution
+* spotinst-elastigroup
+* secrets-manager
+* documentdb
+* dynamodb-table
 
 ## Perguntas

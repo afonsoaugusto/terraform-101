@@ -17,7 +17,8 @@
 	// Add the IDs of extensions you want installed when the container is created.
 	"extensions": [
 		"hashicorp.terraform",
-		"4ops.terraform"
+		"4ops.terraform",
+		"tht13.html-preview-vscode"
 	]
 
 	// Use 'forwardPorts' to make a list of ports inside the container available locally.
