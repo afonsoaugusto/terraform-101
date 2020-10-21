@@ -27,11 +27,6 @@ sudo chown :$USER presentation.html
 ## Agenda
 
 * Terraform 101
-  * Links
-    * Documentação
-    * cursos
-  * Generate apresentation
-  * Agenda
   * Fundamentos de IaC
     * Infrastructure as Code
     * IaC
