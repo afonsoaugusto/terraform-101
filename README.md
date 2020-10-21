@@ -1,16 +1,16 @@
-# Terraform 101 
+# Terraform 101
 
 ![logo](img/logo-2.png)
 
 ## Links
 
-**Documentação**
+### Documentação
 
 * [terraform.io](https://www.terraform.io/)
 * [learn-terraform](https://learn.hashicorp.com/terraform)
 * [Documentation](https://www.terraform.io/docs/configuration)
 
-**cursos**
+### cursos
 
 * [Alura - infraestrutura-como-codigo](https://cursos.alura.com.br/category/infraestrutura#infraestrutura-como-codigo)
 * [Alura - terraform](https://cursos.alura.com.br/course/terraform)
@@ -19,29 +19,50 @@
 ## Generate apresentation
 
 ```sh
-docker run -v $PWD:/src afonsoaugusto/markdown-to-slides \
-    README.md -d -o presentation.html; \
-    chown :$USER presentation.html
-rm -rf presentation.html
+rm -rf presentation.html; \
+docker run -v $PWD:/src afonsoaugusto/markdown-to-slides README.md -d -o presentation.html; \
+sudo chown :$USER presentation.html
 ```
 
 ## Agenda
 
-* Fundamentos de IaC
-* Terraform Basics
-  * Variaveis
-  * Outupts
-  * Locals
-  * Funções
-* Providers
-* Resources
-* Data
-* Modulos
-* Workspaces
-* Backend - TFSTATE
-  * Estrutura do bucket s3 utilizado
-* Tarraform CLI (apply, destroy, state, , taint, import)
-* Terraform Best Pratices
+* Terraform 101
+  * Links
+    * Documentação
+    * cursos
+  * Generate apresentation
+  * Agenda
+  * Fundamentos de IaC
+    * Infrastructure as Code
+    * IaC
+    * [Dry - Don't repeat yourself](https://en.wikipedia.org/wiki/Don%27t_repeat_yourself)
+    * [Casos de Uso](https://www.terraform.io/intro/use-cases.html)
+  * Terraform
+    * Intro
+    * Terraform-flow
+    * Arquivos
+  * Terraform Basics
+    * Variables
+      * Declarando uma variavel de input
+      * Precedencia de carregamento
+    * Locals
+    * Output
+    * [Type Constraints](https://www.terraform.io/docs/configuration/variables.html*type-constraints)
+      * Simples
+      * Complexos
+    * [Functions](https://www.terraform.io/docs/configuration/functions.html)
+      * Principais funções
+    * [Providers](https://www.terraform.io/docs/providers/index.html)
+    * [Resources](https://www.terraform.io/docs/configuration/resources.html)
+    * [Dynamic Blocks](https://www.terraform.io/docs/configuration/expressions.html*dynamic-blocks)
+      * [Best Practices for dynamic Blocks](https://www.terraform.io/docs/configuration/expressions.html*best-practices-for-dynamic-blocks)
+    * [Data Sources](https://www.terraform.io/docs/configuration/data-sources.html)
+    * [Modulos](https://www.terraform.io/docs/configuration/modules.html)
+    * Workspaces
+    * [Backend](https://www.terraform.io/docs/backends/index.html) - TFSTATE
+    * Terraform Best Pratices
+  * Modulos para analise
+  * Perguntas
 
 ## Fundamentos de IaC
 
@@ -70,7 +91,7 @@ Uso do controle de versão, adesão ao princípio DRY, modularização, manuten�
 
 ## Terraform
 
-### Terraform-1
+### Intro
 
 Terraform é uma ferramenta open source de **provisionamento** de infraestrutura, criada pela [HashiCorp](https://www.hashicorp.com/), que permite que definamos nossa infraestrutura como código([IaC](https://en.wikipedia.org/wiki/Infrastructure_as_Code)), usando uma linguagem simples e declarativa.
 
@@ -94,9 +115,10 @@ O terraform é desenvolvido em GO e é [openSource](https://github.com/hashicorp
 [Variaveis](https://www.terraform.io/docs/configuration/variables.html) são parametros para um modulo de Terraform, permitem que aspectos da implementação seja customizado sem que seu codigo seja alterado.
 
 Temos 3 tipos de uso de variaveis:
+
 * Input variables are like function arguments
 * Output values are like function return values
-* Local values are like a function's temporary local variables. 
+* Local values are like a function's temporary local variables.
 
 #### Declarando uma variavel de input
 
@@ -105,12 +127,14 @@ variable "image_id" {
   type = string
 }
 ```
+
 ```hcl
 variable "availability_zone_names" {
   type    = list(string)
   default = ["us-west-1a"]
 }
 ```
+
 ```hcl
 variable "docker_ports" {
   type = list(object({
@@ -127,12 +151,14 @@ variable "docker_ports" {
   ]
 }
 ```
+
 ```hcl
 variable "image_id" {
   type        = string
   description = "The id of the machine image (AMI) to use for the server."
 }
 ```
+
 ```hcl
 variable "image_id" {
   type        = string
@@ -150,7 +176,7 @@ variable "image_id" {
 * Environment variables
 * The terraform.tfvars file, if present.
 * The terraform.tfvars.json file, if present.
-* Any *.auto.tfvars or *.auto.tfvars.json files, processed in lexical order of their filenames.
+* Any \*.auto.tfvars or \*.auto.tfvars.json files, processed in lexical order of their filenames.
 * Any -var and -var-file options on the command line, in the order they are provided. (This includes variables set by a Terraform Cloud workspace.)
 
 ### Locals
@@ -222,11 +248,11 @@ São os tipos que as variaveis podem receber como argumentos na declaração.
 
 #### Complexos
 
-* list(<TYPE>)
-* set(<TYPE>)
-* map(<TYPE>)
-* object({<ATTR NAME> = <TYPE>, ... })
-* tuple([<TYPE>, ...])
+* list(\<TYPE>)
+* set(\<TYPE>)
+* map(\<TYPE>)
+* object({\<ATTR NAME> = \<TYPE>, ... })
+* tuple([\<TYPE>, ...])
 
 ### [Functions](https://www.terraform.io/docs/configuration/functions.html)
 
@@ -252,6 +278,7 @@ Hello, Ander!
 > format("There are %d lights", 4)
 There are 4 lights
 ```
+
 ```hcl
 > format("Hello, %s!", var.name)
 Hello, Valentina!
@@ -347,6 +374,121 @@ b
   "c" = "d"
 }
 ```
+
+##### [File](https://www.terraform.io/docs/configuration/functions/file.html)
+
+`file(path)`
+
+```hcl
+> file("${path.module}/hello.txt")
+Hello World
+```
+
+### [Providers](https://www.terraform.io/docs/providers/index.html)
+
+É a estrutura resposavel por comunicar com a API da estrutura desejada.
+
+```hcl
+# The default provider configuration; resources that begin with `aws_` will use
+# it as the default, and it can be referenced as `aws`.
+provider "aws" {
+  region = "us-east-1"
+}
+
+# Additional provider configuration for west coast region; resources can
+# reference this as `aws.west`.
+provider "aws" {
+  alias  = "west"
+  region = "us-west-2"
+}
+```
+
+#### Principais que nós utilizamos
+
+* [AWS](https://registry.terraform.io/providers/hashicorp/aws/latest/docs)
+* [Spotinst](https://www.terraform.io/docs/providers/spotinst/index.html)
+* [Atlas](https://registry.terraform.io/providers/mongodb/mongodbatlas/latest/docs) -> Futuro
+
+### [Resources](https://www.terraform.io/docs/configuration/resources.html)
+
+Item mais importante do Terraform, ele informa o recurso que será criado/gerenciado.
+
+```hcl
+resource "aws_instance" "web" {
+  ami           = "ami-a1b2c3d4"
+  instance_type = "t2.micro"
+}
+```
+
+### [Dynamic Blocks](https://www.terraform.io/docs/configuration/expressions.html#dynamic-blocks)
+
+```hcl
+resource "aws_elastic_beanstalk_environment" "tfenvtest" {
+  name = "tf-test-name" # can use expressions here
+
+  setting {
+    # but the "setting" block is always a literal block
+  }
+}
+```
+
+```hcl
+resource "aws_elastic_beanstalk_environment" "tfenvtest" {
+  name                = "tf-test-name"
+  application         = "${aws_elastic_beanstalk_application.tftest.name}"
+  solution_stack_name = "64bit Amazon Linux 2018.03 v2.11.4 running Go 1.12.6"
+
+  dynamic "setting" {
+    for_each = var.settings
+    content {
+      namespace = setting.value["namespace"]
+      name = setting.value["name"]
+      value = setting.value["value"]
+    }
+  }
+}
+```
+
+#### [Best Practices for dynamic Blocks](https://www.terraform.io/docs/configuration/expressions.html#best-practices-for-dynamic-blocks)
+
+Overuse of dynamic blocks can make configuration hard to read and maintain, so we recommend using them only when you need to hide details in order to build a clean user interface for a re-usable module. Always write nested blocks out literally where possible.
+
+### [Data Sources](https://www.terraform.io/docs/configuration/data-sources.html)
+
+Data recupera informações de recursos já criados no ambiente sem precisar de gerenciar o mesmo.
+Ou seja, sem precisar de importar o recurso e gerenciar ele.
+
+```hcl
+data "aws_ami" "example" {
+  most_recent = true
+
+  owners = ["self"]
+  tags = {
+    Name   = "app-server"
+    Tested = "true"
+  }
+}
+```
+
+### [Modulos](https://www.terraform.io/docs/configuration/modules.html)
+
+É como uma abstração de um conjunto de recursos para reaproveitamento do mesmo.
+
+```hcl
+module "servers" {
+  source = "./app-cluster"
+
+  servers = 5
+}
+```
+
+### Workspaces
+
+![workspaces](img/workspaces.png)
+
+### [Backend](https://www.terraform.io/docs/backends/index.html) - TFSTATE
+
+### Terraform Best Pratices
 
 ## Modulos para analise
 

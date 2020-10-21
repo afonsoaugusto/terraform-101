@@ -83,6 +83,7 @@ class: center, middle, main-title
 
 - [terraform.io](https://www.terraform.io/)
 - [learn-terraform](https://learn.hashicorp.com/terraform)
+- [Documentation](https://www.terraform.io/docs/configuration)
 
 **cursos**
 
@@ -95,10 +96,9 @@ class: center, middle, main-title
 ---
 ## Generate apresentation
 ```sh
-docker run -v $PWD:/src afonsoaugusto/markdown-to-slides \
-    README.md -d -o presentation.html; \
-    chown :$USER presentation.html
-rm -rf presentation.html
+rm -rf presentation.html; \
+docker run -v $PWD:/src afonsoaugusto/markdown-to-slides README.md -d -o presentation.html; \
+sudo chown :$USER presentation.html
 ```
 
 ---
@@ -108,12 +108,12 @@ rm -rf presentation.html
 - Terraform Basics
  - Variaveis
  - Outupts
+ - Locals
  - Funções
 - Providers
 - Resources
 - Data
 - Modulos
-- Locals
 - Workspaces
 - Backend - TFSTATE
  - Estrutura do bucket s3 utilizado
@@ -147,19 +147,300 @@ Uso do controle de versão, adesão ao princípio DRY, modularização, manuten�
 
 
 ---
+### Casos de Uso
+
+- Heroku App Setup
+- Multi-Tier Applications
+- Self-Service Clusters
+- Multi-Cloud Deployment
+
+
+---
 class: center, middle, title
 
 ## Terraform
 
 ---
-### Terraform-1
+### Terraform
 Terraform é uma ferramenta open source de **provisionamento** de infraestrutura, criada pela [HashiCorp](https://www.hashicorp.com/), que permite que definamos nossa infraestrutura como código([IaC](https://en.wikipedia.org/wiki/Infrastructure_as_Code)), usando uma linguagem simples e declarativa.
 
+O terraform é desenvolvido em GO e é [openSource](https://github.com/hashicorp/terraform/blob/master/LICENSE)
+
+
+---
+### Terraform-flow
 ![Terraform](img/terraform-flow.png)
 
 
 ---
-### Componentes
+### Arquivos
+
+- *.tf
+- *.tfvars
+- *.plan
+- *.TFSTATE
+
+
+---
+class: center, middle, title
+
+## Terraform Basics
+
+---
+### Variables
+[Variaveis](https://www.terraform.io/docs/configuration/variables.html) são parametros para um modulo de Terraform, permitem que aspectos da implementação seja customizado sem que seu codigo seja alterado.
+
+Temos 3 tipos de uso de variaveis:
+
+
+- Input variables are like function arguments
+- Output values are like function return values
+- Local values are like a function&#39;s temporary local variables. 
+
+#### Declarando uma variavel de input
+```hcl
+variable "image_id" {
+  type = string
+}
+```
+```hcl
+variable "availability_zone_names" {
+  type    = list(string)
+  default = ["us-west-1a"]
+}
+```
+```hcl
+variable "docker_ports" {
+  type = list(object({
+    internal = number
+    external = number
+    protocol = string
+  }))
+  default = [
+    {
+      internal = 8300
+      external = 8300
+      protocol = "tcp"
+    }
+  ]
+}
+```
+```hcl
+variable "image_id" {
+  type        = string
+  description = "The id of the machine image (AMI) to use for the server."
+}
+```
+```hcl
+variable "image_id" {
+  type        = string
+  description = "The id of the machine image (AMI) to use for the server."
+
+  validation {
+    condition     = length(var.image_id) > 4 && substr(var.image_id, 0, 4) == "ami-"
+    error_message = "The image_id value must be a valid AMI id, starting with \"ami-\"."
+  }
+}
+```
+#### Precedencia de carregamento
+
+- Environment variables
+- The terraform.tfvars file, if present.
+- The terraform.tfvars.json file, if present.
+- Any *.auto.tfvars or *.auto.tfvars.json files, processed in lexical order of their filenames.
+- Any -var and -var-file options on the command line, in the order they are provided. (This includes variables set by a Terraform Cloud workspace.)
+
+
+---
+### Locals
+Um Local é um valor que recebe um nome a partir de uma expressão ou valor.
+
+```hcl
+locals {
+  # Ids for multiple sets of EC2 instances, merged together
+  instance_ids = concat(aws_instance.blue.*.id, aws_instance.green.*.id)
+}
+
+locals {
+  # Common tags to be assigned to all resources
+  common_tags = {
+    Service = local.service_name
+    Owner   = local.owner
+  }
+}
+```
+
+---
+### Output
+Output é uma forma de expor o valor, seja como retorno de um modulo ou imprimindo como retorno do root.
+
+```hcl
+output "instance_ip_addr" {
+  value = aws_instance.server.private_ip
+}
+```
+```hcl
+output "instance_ip_addr" {
+  value       = aws_instance.server.private_ip
+  description = "The private IP address of the main server instance."
+}
+```
+```hcl
+output "db_password" {
+  value       = aws_db_instance.db.password
+  description = "The password for logging in to the database."
+  sensitive   = true
+}
+```
+```hcl
+output "instance_ip_addr" {
+  value       = aws_instance.server.private_ip
+  description = "The private IP address of the main server instance."
+
+  depends_on = [
+    # Security group rule must be created before this IP address could
+    # actually be used, otherwise the services will be unreachable.
+    aws_security_group_rule.local_access,
+  ]
+}
+```
+
+---
+### Type Constraints
+São os tipos que as variaveis podem receber como argumentos na declaração.
+
+#### Simples
+
+- string
+- number
+- bool
+
+#### Complexos
+
+- list(<TYPE>)
+- set(<TYPE>)
+- map(<TYPE>)
+- object({<ATTR NAME> = <TYPE>, ... })
+- tuple([<TYPE>, ...])
+
+
+---
+### Functions
+
+- Numeric Functions
+- String Functions
+- Collection Functions
+- Encoding Functions
+- Filesystem Functions
+- Date and Time Functions
+- Hash and Crypto Functions
+- IP Network Functions
+- Type Conversion Functions
+
+#### Principais funções
+##### Format
+`format(spec, values...)`
+
+```hcl
+> format("Hello, %s!", "Ander")
+Hello, Ander!
+> format("There are %d lights", 4)
+There are 4 lights
+```
+```hcl
+> format("Hello, %s!", var.name)
+Hello, Valentina!
+> "Hello, ${var.name}!"
+Hello, Valentina!
+```
+##### Join
+`join(separator, list)`
+
+```hcl
+> join(", ", ["foo", "bar", "baz"])
+foo, bar, baz
+> join(", ", ["foo"])
+foo
+```
+##### Split
+`split(separator, string)`
+
+```hcl
+> split(",", "foo,bar,baz")
+[
+  "foo",
+  "bar",
+  "baz",
+]
+> split(",", "foo")
+[
+  "foo",
+]
+> split(",", "")
+[
+  "",
+]
+```
+##### Upper, lower, title
+```hcl
+> upper("hello")
+HELLO
+> upper("алло!")
+АЛЛО!
+```
+```hcl
+> lower("HELLO")
+hello
+> lower("АЛЛО!")
+алло!
+```
+```hcl
+> title("hello world")
+Hello World
+```
+##### Element Index
+`element(list, index)`
+
+```hcl
+> element(["a", "b", "c"], 1)
+b
+```
+`index(list, value)`
+
+```hcl
+> index(["a", "b", "c"], "b")
+1
+```
+##### Map
+
+- From Terraform v0.12, the Terraform language has built-in syntax for creating maps using the { and } delimiters. Use the built-in syntax instead. The map function will be removed in a future version of Terraform.
+
+```hcl
+> map("a", "b", "c", "d")
+{
+  "a" = "b"
+  "c" = "d"
+}
+```
+```hcl
+> {"a" = "b", "c" = "d"}
+{
+  "a" = "b"
+  "c" = "d"
+}
+```
+
+---
+## Modulos para analise
+
+- msk
+- s3
+- cloudfront-distribution
+- spotinst-elastigroup
+- secrets-manager
+- documentdb
+- dynamodb-table
+
 
 ---
 class: center, middle, title
